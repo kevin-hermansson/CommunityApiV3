@@ -31,21 +31,28 @@ namespace CommunityApiV3.Services
         }
 
 
-        public async Task<string> CreateAsync(Comment comment)
+        public async Task<string> CreateAsync(CreateCommentDto dto)
         {
-            var post = await _blogPostRepository.GetByIdAsync(comment.BlogPostId);
-            var user = await _userRepository.GetByIdAsync(comment.UserId);
+            var post = await _blogPostRepository.GetByIdAsync(dto.BlogPostId);
+            var user = await _userRepository.GetByIdAsync(dto.UserId);
 
-            if (post == null || post == null)
+            if (post == null || user == null)
                 return "NotFound";
 
-            if (post.UserId == comment.UserId)
+            if (post.UserId == dto.UserId)
                 return "Forbid";
+
+            var comment = new Comment
+            {
+                Text = dto.Text,
+                UserId = dto.UserId,
+                BlogPostId = dto.BlogPostId
+            };
 
             await _commentRepository.AddAsync(comment);
 
             return "Success";
-
         }
+
     }
 }

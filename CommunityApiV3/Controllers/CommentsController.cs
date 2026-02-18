@@ -1,4 +1,5 @@
-﻿using CommunityApiV3.Models;
+﻿using CommunityApiV3.DTOs.Comments;
+using CommunityApiV3.Models;
 using CommunityApiV3.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
@@ -32,19 +33,19 @@ namespace CommunityApiV3.Controllers
         [SwaggerResponse(200, "Kommentaren skapades")]
         [SwaggerResponse(404, "Användare eller inlägg hittades inte")]
         [SwaggerResponse(403, "Användaren får inte kommentera sitt eget inlägg")]
-        public async Task<IActionResult> Create([FromBody] Comment comment)
+        public async Task<IActionResult> Create([FromBody] CreateCommentDto dto)
         {
-            var result = await _commentService.CreateAsync(comment);
+            var result = await _commentService.CreateAsync(dto);
 
             if (result == "NotFound")
-                return NotFound("User or post not found");
+                return BadRequest("User or post not found");
 
             if (result == "Forbid")
-                return StatusCode(403,"Cant make comment on your own post");
+                return BadRequest("You cannot comment on your own post");
 
-
-            return Ok("Comment created successfully");
+            return Ok("Comment created");
         }
+
 
 
     }

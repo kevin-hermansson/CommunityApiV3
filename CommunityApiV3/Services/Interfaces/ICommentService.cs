@@ -7,6 +7,6 @@ namespace CommunityApiV3.Services.Interfaces
     {
         Task<List<CommentResponseDto>> GetByPostIdAsync(int postId);
 
-        Task<string> CreateAsync(Comment comment);
+        Task<string> CreateAsync(CreateCommentDto dto);
     }
 }
