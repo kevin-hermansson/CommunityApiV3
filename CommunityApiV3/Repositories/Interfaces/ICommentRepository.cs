@@ -4,7 +4,7 @@ namespace CommunityApiV3.Repositories.Interfaces
 {
     public interface ICommentRepository
     {
-        Task<List<Comment>> GetByPostIdAsync(int postId);
+        Task<List<Comment>> GetByBlogPostIdAsync(int blogPostId);
         Task AddAsync(Comment comment);
     }
 }

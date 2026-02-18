@@ -2,7 +2,10 @@
 {
     public class CreateCommentDto
     {
-        public string Text { get; set; }
+        public int UserId { get; set; }
+
         public int BlogPostId { get; set; }
+
+        public string Text { get; set; } = string.Empty;
     }
 }

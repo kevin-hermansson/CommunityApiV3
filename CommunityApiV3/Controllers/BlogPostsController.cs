@@ -1,8 +1,7 @@
-﻿using CommunityApiV3.Models;
+﻿using Microsoft.AspNetCore.Mvc;
 using CommunityApiV3.Services.Interfaces;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
+using CommunityApiV3.DTOs.BlogPosts;
 
 namespace CommunityApiV3.Controllers
 {
@@ -17,102 +16,87 @@ namespace CommunityApiV3.Controllers
             _blogPostService = blogPostService;
         }
 
-
         [HttpGet]
-        [SwaggerOperation(Summary = "Hämta alla blogginlägg", Description = "Returnerar en lista med alla blogginlägg")]
-        [SwaggerResponse(200, "Lista med alla blogginlägg returnerades.")]
+        [SwaggerOperation(Summary = "Hämta alla blogginlägg", Description = "Returnerar en lista med alla blogginlägg.")]
+        [SwaggerResponse(200, "Lista med blogginlägg returnerades")]
         public async Task<IActionResult> GetAll()
         {
             var posts = await _blogPostService.GetAllAsync();
             return Ok(posts);
         }
 
-
         [HttpGet("{id}")]
-        [SwaggerOperation(Summary = "Hämta blogginlägg via id", Description = "Returnerar ett inlägg baserat på valt id.")]
-        [SwaggerResponse(200, "Blogginlägg hittades")]
-        [SwaggerResponse(404, "Blogginlägg kunde inte hittas")]
+        [SwaggerOperation(Summary = "Hämta blogginlägg via id", Description = "Returnerar ett specifikt blogginlägg baserat på angivet id.")]
+        [SwaggerResponse(200, "Blogginlägg hittat")]
+        [SwaggerResponse(404, "Blogginlägg hittades inte")]
         public async Task<IActionResult> GetById(int id)
         {
             var post = await _blogPostService.GetByIdAsync(id);
+
             if (post == null)
-                return NotFound("Blogpost not found");
+                return NotFound();
 
             return Ok(post);
         }
 
-
-        [HttpPost]
-        [SwaggerOperation(Summary = "Skapa nytt blogginlägg", Description = "Skapar nytt blogginlägg kopplat till en användare och kategori")]
-        [SwaggerResponse(200, "Blogginlägget skapades")]
-        [SwaggerResponse(400, "Ogiltig användare eller kategori")]
-        public async Task<IActionResult> Create([FromBody] BlogPost post)
+        [HttpGet("title/{title}")]
+        [SwaggerOperation(Summary = "Sök blogginlägg på titel", Description = "Returnerar blogginlägg vars titel matchar angivet värde.")]
+        [SwaggerResponse(200, "Sökresultat returnerades")]
+        public async Task<IActionResult> GetByTitle(string title)
         {
-            var result = await _blogPostService.CreateAsync(post);
-
-            if (!result)
-                return BadRequest("Invalid user or category");
-
-            return Ok("Blogpost created");
-        }
-
-
-        [HttpPut("{id}")]
-        [SwaggerOperation(Summary = "Uppdatera blogginlägg", Description = "Uppdaterar ett blogginlägg om rätt användare försöker uppdatera det.")]
-        [SwaggerResponse(200, "Blogginlägget uppdaterades")]
-        [SwaggerResponse(404, "Blogginlägget hittades inte")]
-        [SwaggerResponse(403, "Användaren har inte rätt att uppdatera detta inlägg")]
-        public async Task<IActionResult> Update(int id, [FromBody] BlogPost updatedPost)
-        {
-            var result = await _blogPostService.UpdateAsync(id, updatedPost.UserId, updatedPost);
-
-            if (result == "NotFound")
-                return NotFound("Post not found");
-
-            if (result == "Forbid")
-                return Forbid();
-
-            return Ok("Blogpost updated successfully");
-        }
-
-
-        [HttpDelete("{id}")]
-        [SwaggerOperation(Summary = "Ta bort blogginlägg", Description = "Tar bort ett blogginlägg om rätt användare försöker ta bort det.")]
-        [SwaggerResponse(200, "Blogginlägget togs bort")]
-        [SwaggerResponse(404, "Blogginlägget hittades inte")]
-        [SwaggerResponse(403, "Användaren har inte rätt att ta bort detta inlägg")]
-        public async Task<IActionResult> Delete(int id, [FromBody] BlogPost post)
-        {
-            var result = await _blogPostService.DeleteAsync(id, post.UserId);
-
-            if (result == "NotFound")
-                return NotFound("Post not found");
-
-            if (result == "Forbidden")
-                return Forbid();
-
-            return Ok("Blogpost deleted successfully");
-        }
-
-
-        [HttpGet("search")]
-        [SwaggerOperation(Summary = "Sök blogginlägg via titel", Description = "Returnerar de blogginlägg som innehåller sökordet")]
-        [SwaggerResponse(200,"Lista med matchande blogginlägg returnerades")]
-        public async Task<IActionResult> SearchByTitle (string title)
-        {
-            var posts = await _blogPostService.SearchByTitleAsync(title);
+            var posts = await _blogPostService.GetByTitleAsync(title);
             return Ok(posts);
         }
 
         [HttpGet("category/{categoryId}")]
-        [SwaggerOperation(Summary = "Hämta blogginlägg via kategori", Description = "Returnerar alla blogginlägg som tillhör vald kategori")]
-        [SwaggerResponse(200, "Lista med blogginlägg returnerades")]
+        [SwaggerOperation(Summary = "Sök blogginlägg på kategori", Description = "Returnerar blogginlägg som tillhör angiven kategori.")]
+        [SwaggerResponse(200, "Sökresultat returnerades")]
         public async Task<IActionResult> GetByCategory(int categoryId)
         {
             var posts = await _blogPostService.GetByCategoryAsync(categoryId);
             return Ok(posts);
         }
 
+        [HttpPost]
+        [SwaggerOperation(Summary = "Skapa nytt blogginlägg", Description = "Skapar ett nytt blogginlägg kopplat till en användare och kategori.")]
+        [SwaggerResponse(201, "Blogginlägg skapat")]
+        [SwaggerResponse(400, "Ogiltig användare eller kategori")]
+        public async Task<IActionResult> Create([FromBody] CreateBlogPostDto dto)
+        {
+            var id = await _blogPostService.CreateAsync(dto);
 
+            if (id == null)
+                return BadRequest("Invalid user or category");
+
+            return Created("", id);
+        }
+
+        [HttpPut("{id}")]
+        [SwaggerOperation(Summary = "Uppdatera blogginlägg", Description = "Uppdaterar ett blogginlägg. Endast skaparen får uppdatera.")]
+        [SwaggerResponse(200, "Blogginlägg uppdaterat")]
+        [SwaggerResponse(400, "Inte behörig eller ogiltigt inlägg")]
+        public async Task<IActionResult> Update(int id, [FromBody] UpdateBlogPostDto dto)
+        {
+            var result = await _blogPostService.UpdateAsync(id, dto);
+
+            if (!result)
+                return BadRequest("Not allowed or blogpost not found");
+
+            return Ok("Blogpost updated");
+        }
+
+        [HttpDelete("{id}")]
+        [SwaggerOperation(Summary = "Ta bort blogginlägg", Description = "Tar bort ett blogginlägg. Endast ägaren får ta bort.")]
+        [SwaggerResponse(200, "Blogginlägg borttaget")]
+        [SwaggerResponse(400, "Inte behörig eller ogiltigt inlägg")]
+        public async Task<IActionResult> Delete(int id, [FromBody] DeleteBlogPostDto dto)
+        {
+            var result = await _blogPostService.DeleteAsync(id, dto.UserId);
+
+            if (!result)
+                return BadRequest("Not allowed or blogpost not found");
+
+            return Ok("Blogpost deleted");
+        }
     }
 }

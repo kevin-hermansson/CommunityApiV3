@@ -17,7 +17,7 @@ namespace CommunityApiV3.Controllers
         }
 
 
-        [HttpGet("post/{postId}")]
+        [HttpGet("{postId}")]
         [SwaggerOperation(Summary = "Hämta kommentarer för ett blogginlägg", Description = "Returnerar alla kommentarer som tillhör ett specifikt blogginlägg.")]
         [SwaggerResponse(200, "Lista med kommentarer returnerades")]
         public async Task<IActionResult> GetByPostId(int postId)
@@ -40,7 +40,7 @@ namespace CommunityApiV3.Controllers
                 return NotFound("User or post not found");
 
             if (result == "Forbid")
-                return StatusCode(403);
+                return StatusCode(403,"Cant make comment on your own post");
 
 
             return Ok("Comment created successfully");

@@ -18,29 +18,37 @@ namespace CommunityApiV3.Services
         {
             var users = await _userRepository.GetAllAsync();
 
-            return users.Select(u => new UserResponseDto {Id = u.Id, Username = u.Username, Email = u.Email }).ToList();
+            return users.Select(u => new UserResponseDto
+            {
+                Id = u.Id,
+                Username = u.Username,
+                Email = u.Email
+            }).ToList();
         }
 
-        public async Task<User?> GetByIdAsync(int id)
-        {
-            return await _userRepository.GetByIdAsync(id);
-        }
 
-        public async Task<int?> LoginAsync(string username, string password)
+        public async Task<UserResponseDto?> GetByIdAsync(int id)
         {
-            var user = await _userRepository.GetByUsernameAsync(username);
+            var user = await _userRepository.GetByIdAsync(id);
 
             if (user == null)
                 return null;
 
-            if (user.Password != password)
-                return null;
-
-            return user.Id;
+            return new UserResponseDto
+            {
+                Id = user.Id,
+                Username = user.Username,
+                Email = user.Email
+            };
         }
 
         public async Task<int> CreateAsync(CreateUserDto dto)
         {
+            var existingUser = await _userRepository.GetByUsernameAsync(dto.Username);
+
+            if (existingUser != null)
+                return 0;
+
             var user = new User
             {
                 Username = dto.Username,
@@ -48,25 +56,40 @@ namespace CommunityApiV3.Services
                 Email = dto.Email
             };
 
-            return await _userRepository.AddAsync(user);
+            await _userRepository.AddAsync(user);
+
+            return user.Id;
         }
 
-
-        public async Task<bool> UpdateAsync(int id, User updatedUser)
+        public async Task<int?> LoginAsync(LoginDto dto)
         {
-            var existingUser = await _userRepository.GetByIdAsync(id);
+            var user = await _userRepository.GetByUsernameAsync(dto.Username);
 
-            if (existingUser == null)
+            if (user == null)
+                return null;
+
+            if (user.Password != dto.Password)
+                return null;
+
+            return user.Id;
+        }
+
+        public async Task<bool> UpdateAsync(int id, UpdateUserDto dto)
+        {
+            var user = await _userRepository.GetByIdAsync(id);
+
+            if (user == null)
                 return false;
 
-            existingUser.Username = updatedUser.Username;
-            existingUser.Password = updatedUser.Password;
-            existingUser.Email = updatedUser.Email;
+            user.Username = dto.Username;
+            user.Password = dto.Password;
+            user.Email = dto.Email;
 
-            await _userRepository.UpdateAsync(existingUser);
+            await _userRepository.UpdateAsync(user);
 
             return true;
         }
+
         public async Task<bool> DeleteAsync(int id)
         {
             var user = await _userRepository.GetByIdAsync(id);

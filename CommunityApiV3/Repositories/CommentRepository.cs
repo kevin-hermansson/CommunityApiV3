@@ -13,16 +13,15 @@ namespace CommunityApiV3.Repositories
         {
             _db = db;
         }
-
-        public async Task<List<Comment>> GetByPostIdAsync(int postId)
-        {
-            return await _db.Comments.Where(c => c.BlogPostId == postId).ToListAsync();
-        }
-
         public async Task AddAsync(Comment comment)
         {
             await _db.Comments.AddAsync(comment);
             await _db.SaveChangesAsync();
+        }
+
+        public async Task<List<Comment>> GetByBlogPostIdAsync(int blogPostId)
+        {
+            return await _db.Comments.Include(c => c.User).Where(c => c.BlogPostId == blogPostId).ToListAsync();
         }
     }
 }

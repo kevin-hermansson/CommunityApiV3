@@ -16,31 +16,50 @@ namespace CommunityApiV3.Repositories
 
         public async Task<List<BlogPost>> GetAllAsync()
         {
-            return await _db.Blogposts.ToListAsync();
+            return await _db.Blogposts
+                .Include(p => p.User)
+                .Include(p => p.Category)
+                .ToListAsync();
         }
+
         public async Task<BlogPost?> GetByIdAsync(int id)
         {
-            return await _db.Blogposts.FindAsync(id);
+            return await _db.Blogposts
+                .Include(p => p.User)
+                .Include(p => p.Category)
+                .FirstOrDefaultAsync(p => p.Id == id);
         }
+
         public async Task<List<BlogPost>> GetByTitleAsync(string title)
         {
-            return await _db.Blogposts.Where(p=> p.Title.Contains(title)).ToListAsync();
+            return await _db.Blogposts
+                .Include(p => p.User)
+                .Include(p => p.Category)
+                .Where(p => p.Title.Contains(title))
+                .ToListAsync();
         }
 
         public async Task<List<BlogPost>> GetByCategoryAsync(int categoryId)
         {
-            return await _db.Blogposts.Where(p=>p.CategoryId == categoryId).ToListAsync();
+            return await _db.Blogposts
+                .Include(p => p.User)
+                .Include(p => p.Category)
+                .Where(p => p.CategoryId == categoryId)
+                .ToListAsync();
         }
+
         public async Task AddAsync(BlogPost post)
         {
             await _db.Blogposts.AddAsync(post);
             await _db.SaveChangesAsync();
         }
+
         public async Task UpdateAsync(BlogPost post)
         {
             _db.Blogposts.Update(post);
             await _db.SaveChangesAsync();
         }
+
         public async Task DeleteAsync(BlogPost post)
         {
             _db.Blogposts.Remove(post);

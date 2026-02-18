@@ -1,4 +1,5 @@
-﻿using CommunityApiV3.Models;
+﻿using CommunityApiV3.DTOs.BlogPosts;
+using CommunityApiV3.Models;
 using CommunityApiV3.Repositories.Interfaces;
 using CommunityApiV3.Services.Interfaces;
 
@@ -9,79 +10,127 @@ namespace CommunityApiV3.Services
         private readonly IBlogPostRepository _blogPostRepository;
         private readonly IUserRepository _userRepository;
         private readonly ICategoryRepository _categoryRepository;
-        
-        public BlogPostService(IBlogPostRepository blogPostRepository,
-            IUserRepository userRepository, ICategoryRepository categoryRepository)
+
+        public BlogPostService(
+            IBlogPostRepository blogPostRepository,
+            IUserRepository userRepository,
+            ICategoryRepository categoryRepository)
         {
             _blogPostRepository = blogPostRepository;
             _userRepository = userRepository;
             _categoryRepository = categoryRepository;
         }
 
-        public async Task<List<BlogPost>> GetAllAsync()
+        public async Task<List<BlogPostResponseDto>> GetAllAsync()
         {
-            return await _blogPostRepository.GetAllAsync();
+            var posts = await _blogPostRepository.GetAllAsync();
+
+            return posts.Select(p => new BlogPostResponseDto
+            {
+                Id = p.Id,
+                Title = p.Title,
+                Text = p.Text,
+                Username = p.User.Username,
+                CategoryName = p.Category.Name
+            }).ToList();
         }
 
-        public async Task<BlogPost?> GetByIdAsync(int id)
+        public async Task<BlogPostResponseDto?> GetByIdAsync(int id)
         {
-            return await _blogPostRepository.GetByIdAsync(id);
+            var post = await _blogPostRepository.GetByIdAsync(id);
+            if (post == null) return null;
+
+            return new BlogPostResponseDto
+            {
+                Id = post.Id,
+                Title = post.Title,
+                Text = post.Text,
+                Username = post.User.Username,
+                CategoryName = post.Category.Name
+            };
         }
 
-        public async Task<List<BlogPost>> SearchByTitleAsync(string title)
+        public async Task<List<BlogPostResponseDto>> GetByTitleAsync(string title)
         {
-            return await _blogPostRepository.GetByTitleAsync(title);
+            var posts = await _blogPostRepository.GetByTitleAsync(title);
+
+            return posts.Select(p => new BlogPostResponseDto
+            {
+                Id = p.Id,
+                Title = p.Title,
+                Text = p.Text,
+                Username = p.User.Username,
+                CategoryName = p.Category.Name
+            }).ToList();
         }
 
-        public async Task<List<BlogPost>> GetByCategoryAsync(int categoryId)
+        public async Task<List<BlogPostResponseDto>> GetByCategoryAsync(int categoryId)
         {
-            return await _blogPostRepository.GetByCategoryAsync(categoryId);
+            var posts = await _blogPostRepository.GetByCategoryAsync(categoryId);
+
+            return posts.Select(p => new BlogPostResponseDto
+            {
+                Id = p.Id,
+                Title = p.Title,
+                Text = p.Text,
+                Username = p.User.Username,
+                CategoryName = p.Category.Name
+            }).ToList();
         }
 
-        public async Task<bool> CreateAsync(BlogPost post)
+        public async Task<int?> CreateAsync(CreateBlogPostDto dto)
         {
-            var user = await _userRepository.GetByIdAsync(post.UserId);
-            var category = await _categoryRepository.GetByIdAsync(post.CategoryId);
+            var user = await _userRepository.GetByIdAsync(dto.UserId);
+            if (user == null) 
+                return null;
 
-            if (user == null || category == null)
-                return false;
 
+            var category = await _categoryRepository.GetByIdAsync(dto.CategoryId);
+            if (category == null) 
+                return null;
+
+
+            var post = new BlogPost
+            {
+                Title = dto.Title,
+                Text = dto.Text,
+                UserId = dto.UserId,
+                CategoryId = dto.CategoryId
+            };
 
             await _blogPostRepository.AddAsync(post);
+            return post.Id;
+        }
+
+        public async Task<bool> UpdateAsync(int id, UpdateBlogPostDto dto)
+        {
+            var post = await _blogPostRepository.GetByIdAsync(id);
+
+            if (post == null) 
+                return false;
+
+            if (post.UserId != dto.UserId)
+                return false;
+
+            post.Title = dto.Title;
+            post.Text = dto.Text;
+            post.CategoryId = dto.CategoryId;
+
+            await _blogPostRepository.UpdateAsync(post);
             return true;
         }
-        
-        public async Task<string> UpdateAsync(int id, int userId, BlogPost updatedPost)
+
+        public async Task<bool> DeleteAsync(int id, int userId)
         {
-            var existingPost = await _blogPostRepository.GetByIdAsync(id);
+            var post = await _blogPostRepository.GetByIdAsync(id);
+            if (post == null) 
+                return false;
 
-            if (existingPost == null)
-                return "NotFound";
+            if (post.UserId != userId)
+                return false;
 
-            if (existingPost.UserId != userId)
-                return "Forbid";
-
-            existingPost.Title = updatedPost.Title;
-            existingPost.Text = updatedPost.Text;
-            existingPost.CategoryId = updatedPost.CategoryId;
-
-            await _blogPostRepository.UpdateAsync(existingPost);
-            return "Success";
-        }
-
-        public async Task<string> DeleteAsync(int id, int userId)
-        {
-            var existingPost = await _blogPostRepository.GetByIdAsync(id);
-
-            if (existingPost == null)
-                return "NotFound";
-
-            if (existingPost.UserId != userId)
-                return "Forbid";
-
-            await _blogPostRepository.DeleteAsync(existingPost);
-
-            return "Success";
+            await _blogPostRepository.DeleteAsync(post);
+            return true;
         }
     }
 }

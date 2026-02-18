@@ -1,4 +1,5 @@
-﻿using CommunityApiV3.Models;
+﻿using CommunityApiV3.DTOs.Comments;
+using CommunityApiV3.Models;
 using CommunityApiV3.Repositories.Interfaces;
 using CommunityApiV3.Services.Interfaces;
 
@@ -17,10 +18,18 @@ namespace CommunityApiV3.Services
             _userRepository = userRepository;
         }
 
-        public async Task<List<Comment>> GetByPostIdAsync(int postId)
+        public async Task<List<CommentResponseDto>> GetByPostIdAsync(int postId)
         {
-            return await _commentRepository.GetByPostIdAsync(postId);
+            var comments = await _commentRepository.GetByBlogPostIdAsync(postId);
+
+            return comments.Select(c => new CommentResponseDto
+            {
+                Id = c.Id,
+                Text = c.Text,
+                Username = c.User!.Username
+            }).ToList();
         }
+
 
         public async Task<string> CreateAsync(Comment comment)
         {

@@ -6,6 +6,8 @@ namespace CommunityApiV3.Repositories.Interfaces
     {
         Task<List<Category>> GetAllAsync();
         Task<Category?> GetByIdAsync(int id);
-        Task AddAsync(Category category);
+        Task<int> AddAsync(Category category);
+        Task DeleteAsync(Category category);
     }
+
 }
