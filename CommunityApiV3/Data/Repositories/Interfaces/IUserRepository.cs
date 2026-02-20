@@ -1,7 +1,7 @@
 ﻿using CommunityApiV3.Models;
 
 
-namespace CommunityApiV3.Repositories.Interfaces
+namespace CommunityApiV3.Data.Repositories.Interfaces
 {
     public interface IUserRepository
     {

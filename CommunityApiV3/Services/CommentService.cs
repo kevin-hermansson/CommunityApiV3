@@ -1,6 +1,6 @@
-﻿using CommunityApiV3.DTOs.Comments;
+﻿using CommunityApiV3.Data.Repositories.Interfaces;
+using CommunityApiV3.DTOs.Comments;
 using CommunityApiV3.Models;
-using CommunityApiV3.Repositories.Interfaces;
 using CommunityApiV3.Services.Interfaces;
 
 namespace CommunityApiV3.Services

@@ -1,9 +1,9 @@
 ﻿using CommunityApiV3.Data;
+using CommunityApiV3.Data.Repositories.Interfaces;
 using CommunityApiV3.Models;
-using CommunityApiV3.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
-namespace CommunityApiV3.Repositories
+namespace CommunityApiV3.Data.Repositories
 {
     public class UserRepository : IUserRepository
     {

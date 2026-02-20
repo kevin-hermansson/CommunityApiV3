@@ -1,6 +1,6 @@
 using CommunityApiV3.Data;
-using CommunityApiV3.Repositories;
-using CommunityApiV3.Repositories.Interfaces;
+using CommunityApiV3.Data.Repositories;
+using CommunityApiV3.Data.Repositories.Interfaces;
 using CommunityApiV3.Services;
 using CommunityApiV3.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
